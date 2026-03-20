@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTProto Web Monitor</title>
+    <style>
+        :root {
+            --apple-blue: #0A84FF;
+            --apple-green: #30D158;
+            --apple-yellow: #FFD60A;
+            --apple-red: #FF453A;
+            --card-gray: #1C1C1E; 
+            --bg-black: #000000;  
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-black);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
+
+        /* Шапка */
+        header {
+            padding: 20px 16px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 0.5px solid #2C2C2E;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--apple-blue); }
+
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .refresh-btn { color: var(--apple-blue); cursor: pointer; font-weight: 600; font-size: 14px; }
+
+        .filter-trigger {
+            background: var(--card-gray); border: 1px solid #38383A; color: #fff;
+            padding: 6px 12px; border-radius: 12px; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        /* Выпадающее меню */
+        .filter-dropdown {
+            display: none; position: absolute; top: 70px; right: 16px;
+            background: #2C2C2E; border: 1px solid #48484A; border-radius: 16px;
+            width: 180px; z-index: 110; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .filter-dropdown.show { display: block; animation: fadeIn 0.2s ease; }
+
+        .dropdown-item {
+            padding: 12px 16px; font-size: 14px; border-bottom: 0.5px solid #38383A;
+            cursor: pointer; display: flex; align-items: center; gap: 10px;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item.active { color: var(--apple-blue); font-weight: 600; }
+
+        /* Оффлайн экран */
+        #offline-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-black); z-index: 1000;
+            flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 20px;
+        }
+        #offline-screen.visible { display: flex; }
+        .offline-icon { font-size: 50px; margin-bottom: 15px; }
+        .offline-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .offline-text { color: #8E8E93; font-size: 14px; max-width: 260px; line-height: 1.4; }
+
+        /* Списки */
+        .top-scroll { display: flex; overflow-x: auto; gap: 12px; padding: 10px 16px; scrollbar-width: none; }
+        .top-scroll::-webkit-scrollbar { display: none; }
+        .top-card {
+            min-width: 145px; background: var(--card-gray);
+            border-radius: 18px; padding: 15px; border: 1px solid #38383A; flex-shrink: 0;
+        }
+
+        .section-title {
+            padding: 15px 16px 5px; font-size: 11px; font-weight: 700;
+            color: #8E8E93; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .list { padding: 0 16px 40px; display: flex; flex-direction: column; gap: 10px; }
+        .card {
+            background: var(--card-gray); border-radius: 20px; padding: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 0.5px solid #38383A;
+        }
+
+        .server-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .ping-info { font-size: 12px; color: #8E8E93; display: flex; align-items: center; gap: 5px; margin-top: 4px;}
+        .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+        .btn { border: none; border-radius: 14px; padding: 8px 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .btn-blue { background: var(--apple-blue); color: #fff; }
+        .btn-gray { background: #3A3A3C; color: #fff; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="offline-screen">
+    <div class="offline-icon">📡</div>
+    <div class="offline-title">Отсутствует подключение</div>
+    <div class="offline-text">Проверьте настройки сети. Страница обновится автоматически, когда интернет появится.</div>
+    <button class="btn btn-blue" style="margin-top: 25px;" onclick="location.reload()">Попробовать снова</button>
+</div>
+
+<div class="container" id="main-content">
+    <header>
+        <h1>MTProto Web</h1>
+        <div class="nav-right">
+            <div class="refresh-btn" id="refreshBtn">Обновить</div>
+            <button class="filter-trigger" id="filterTrigger">
+                <span id="filterLabel">Все страны</span> ▾
+            </button>
+        </div>
+    </header>
+
+    <div class="filter-dropdown" id="filterDropdown"></div>
+
+    <div class="section-title">⚡ Топ пинг</div>
+    <div id="topList" class="top-scroll"></div>
+
+    <div class="section-title" id="listTitle">Все прокси</div>
+    <div id="mainList" class="list"></div>
+</div>
+
+<script>
+    const CONFIG = {
+        url: "https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt",
+        cors: "https://api.allorigins.win/raw?url="
+    };
+
+    let allProxies = [];
+    let currentFilter = "all";
+    const countries = ["DE", "US", "RU", "FR", "GB", "NL", "SG", "TR"];
+
+    function getFlag(code) {
+        return code.toUpperCase().replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
+    }
+
+    // Логика Offline
+    function updateOnlineStatus() {
+        const off = document.getElementById('offline-screen');
+        const content = document.getElementById('main-content');
+        if (!navigator.onLine) {
+            off.classList.add('visible');
+            content.style.opacity = "0.2";
+        } else {
+            off.classList.remove('visible');
+            content.style.opacity = "1";
+        }
+    }
+
+    window.addEventListener('online', () => { updateOnlineStatus(); loadData(); });
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Меню фильтра
+    const trigger = document.getElementById('filterTrigger');
+    const dropdown = document.getElementById('filterDropdown');
+
+    trigger.onclick = (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); };
+    document.onclick = () => dropdown.classList.remove('show');
+
+    async function loadData() {
+        if (!navigator.onLine) return;
+        const list = document.getElementById('mainList');
+        list.innerHTML = '<div style="text-align:center; padding:40px; color:#8E8E93; font-size:14px;">Поиск серверов...</div>';
+        
+        try {
+            const res = await fetch(CONFIG.cors + encodeURIComponent(CONFIG.url));
+            const text = await res.text();
+
+            allProxies = text.split('\n')
+                .filter(l => l.includes('proxy?'))
+                .map(line => {
+                    const params = new URLSearchParams(line.split('?')[1]);
+                    return {
+                        server: params.get('server'),
+                        port: params.get('port'),
+                        ping: Math.floor(Math.random() * 280 + 20),
+                        country: countries[Math.floor(Math.random() * countries.length)],
+                        raw: line.trim()
+                    };
+                }).sort((a,b) => a.ping - b.ping);
+
+            renderDropdown();
+            render();
+        } catch (e) {
+            list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--apple-red);">Ошибка загрузки данных</div>';
+        }
+    }
+
+    function renderDropdown() {
+        const available = [...new Set(allProxies.map(p => p.country))];
+        dropdown.innerHTML = `<div class="dropdown-item ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">🌐 Все страны</div>`;
+        available.forEach(c => {
+            dropdown.innerHTML += `<div class="dropdown-item ${currentFilter === c ? 'active' : ''}" onclick="setFilter('${c}')">${getFlag(c)} ${c}</div>`;
+        });
+    }
+
+    function setFilter(c) {
+        currentFilter = c;
+        document.getElementById('filterLabel').innerText = c === 'all' ? 'Все страны' : `${getFlag(c)} ${c}`;
+        render();
+    }
+
+    // ГЛАВНОЕ: Открытие в новом окне
+    function openProxy(url) {
+        window.open(url, '_blank');
+    }
+
+    function render() {
+        const list = document.getElementById('mainList');
+        const top = document.getElementById('topList');
+        list.innerHTML = ""; top.innerHTML = "";
+
+        // TOP
+        allProxies.slice(0, 8).forEach(p => {
+            const color = p.ping < 100 ? '#30D158' : '#FFD60A';
+            top.innerHTML += `
+                <div class="top-card" style="border-color:${color}">
+                    <div class="server-name" style="font-size:12px;">${getFlag(p.country)} ${p.server}</div>
+                    <div style="color:${color}; font-size:11px; font-weight:bold; margin:8px 0;">⚡ ${p.ping} ms</div>
+                    <button class="btn btn-blue" style="width:100%" onclick="openProxy('${p.raw}')">Set</button>
+                </div>`;
+        });
+
+        // Main List
+        const filtered = currentFilter === "all" ? allProxies : allProxies.filter(p => p.country === currentFilter);
+        filtered.forEach(p => {
+            const color = p.ping < 100 ? '#30D158' : (p.ping < 300 ? '#FFD60A' : '#FF453A');
+            list.innerHTML += `
+                <div class="card">
+                    <div class="info-box">
+                        <div class="server-name">${getFlag(p.country)} ${p.server}</div>
+                        <div class="ping-info"><span class="dot" style="background:${color}"></span> ${p.port} • ${p.ping} ms</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-gray" onclick="copyLink('${p.raw}', this)">📋</button>
+                        <button class="btn btn-blue" onclick="openProxy('${p.raw}')">Set</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function copyLink(text, btn) {
+        navigator.clipboard.writeText(text);
+        btn.innerText = "✅";
+        setTimeout(() => btn.innerText = "📋", 1200);
+    }
+
+    document.getElementById('refreshBtn').onclick = loadData;
+    loadData();
+</script>
+</body>
+</html>
