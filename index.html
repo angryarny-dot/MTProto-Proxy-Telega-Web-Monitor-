@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MTProto Monitor</title>
+    <title>MTProto Monitor Icon Pro</title>
     <style>
         :root {
             --apple-blue: #0A84FF;
             --apple-green: #30D158;
             --apple-yellow: #FFD60A;
-            --apple-red: #FF453A;
             --card-gray: #1C1C1E; 
             --bg-black: #000000;  
+            --text-gray: #8E8E93;
         }
 
         body {
@@ -19,11 +19,11 @@
             background-color: var(--bg-black);
             color: #fff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        .container { max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        .container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
 
         header {
             padding: 16px;
@@ -34,133 +34,191 @@
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        h1 { margin: 0; font-size: 19px; font-weight: 800; color: var(--apple-blue); }
+        h1 { margin: 0; font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 
-        .refresh-btn { color: var(--apple-blue); cursor: pointer; font-weight: 600; font-size: 14px; border:none; background:none; outline:none; }
+        /* Крупная кнопка обновления */
+        .refresh-btn { 
+            width: 40px; height: 40px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--apple-blue);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.15); }
+        .refresh-btn:active { transform: scale(0.95); }
+        .refresh-btn svg { width: 22px; height: 22px; }
 
-        .section-title { padding: 20px 16px 10px; font-size: 11px; font-weight: 700; color: #8E8E93; text-transform: uppercase; letter-spacing: 1px; }
-
-        .list { padding: 0 16px 40px; display: flex; flex-direction: column; gap: 10px; }
+        .list { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
         
         .card {
             background: var(--card-gray); border-radius: 20px; padding: 16px;
             display: flex; justify-content: space-between; align-items: center;
             border: 0.5px solid #38383A;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .info { flex: 1; min-width: 0; }
-        .server-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .server-meta { font-size: 12px; color: #8E8E93; display: flex; align-items: center; gap: 6px; }
+        .info { flex: 1; min-width: 0; margin-right: 12px; }
+        .server-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+        .server-meta { font-size: 13px; color: var(--text-gray); display: flex; align-items: center; gap: 8px; }
 
-        .btn { border: none; border-radius: 14px; padding: 8px 16px; font-weight: 700; cursor: pointer; font-size: 13px; background: var(--apple-blue); color: #fff; }
-        .btn-copy { background: #3A3A3C; margin-right: 8px; }
+        .ping-val { font-weight: 800; font-size: 12px; padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+        .fast { color: var(--apple-green); }
+        .slow { color: var(--apple-yellow); }
 
-        #status-msg { text-align: center; padding: 20px; color: #8E8E93; font-size: 14px; }
+        .actions { display: flex; gap: 10px; align-items: center; }
         
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .online { background: var(--apple-green); box-shadow: 0 0 8px var(--apple-green); }
+        /* Кнопки действий (иконки) */
+        .icon-btn { 
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .icon-btn:active { transform: scale(0.92); opacity: 0.8; }
+        .icon-btn svg { width: 20px; height: 20px; }
+
+        .btn-set { background: var(--apple-blue); color: #fff; }
+        .btn-copy { background: #2C2C2E; color: #fff; border: 0.5px solid #38383A; }
+
+        #progress-line { height: 2px; background: var(--apple-blue); width: 0%; position: fixed; top: 72px; z-index: 101; transition: width 0.2s; }
+        
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .rotating { animation: rotate 1s linear infinite; }
     </style>
 </head>
 <body>
 
+<div id="progress-line"></div>
+
 <div class="container">
     <header>
-        <h1>MTProto Web</h1>
-        <button class="refresh-btn" id="refreshBtn">Обновить</button>
+        <h1>Proxy Web</h1>
+        <button class="refresh-btn" id="refreshBtn" title="Обновить и пинговать">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 4v6h-6"></path>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+        </button>
     </header>
 
-    <div class="section-title">Список прокси (GitHub)</div>
-    <div id="status-msg">Загрузка данных...</div>
-    <div id="mainList" class="list"></div>
+    <div id="mainList" class="list">
+        <div style="text-align:center; color:var(--text-gray); padding:40px; font-size:14px;">Нажмите ↻ для загрузки</div>
+    </div>
 </div>
 
 <script>
-    const DATA_URL = "https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt";
-    // Резервные прокси для обхода CORS, если прямой запрос не пройдет
-    const PROXY_HELPERS = [
-        "", // Сначала пробуем напрямую
-        "https://api.allorigins.win/raw?url=",
-        "https://corsproxy.io/?"
-    ];
+    // SVG Иконки для кнопок в списке
+    const ICON_PLANE = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.946 9.315c-.522.174-.527.455.01.634l2.887.969 1.921 5.43c.21.595.576.667.818.167l1.39-2.83 4.626 4.625c.415.415 1.091.146 1.091-.437V15.25l4.637-4.637 4.674 4.674c.415.415 1.091.146 1.091-.437V1.102c0-.584-.638-.897-1.091-.438L1.946 9.315Z"></path></svg>`;
+    const ICON_COPY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-    async function loadData(attempt = 0) {
-        const msg = document.getElementById('status-msg');
+    const GITHUB_URL = "https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt";
+    let proxies = [];
+
+    async function load() {
         const list = document.getElementById('mainList');
+        const bar = document.getElementById('progress-line');
+        const refreshBtn = document.getElementById('refreshBtn');
         
-        if (attempt === 0) {
-            list.innerHTML = "";
-            msg.style.display = "block";
-            msg.innerText = "Подключение к репозиторию...";
-        }
-
+        refreshBtn.classList.add('rotating'); // Анимация вращения
+        
         try {
-            const finalUrl = PROXY_HELPERS[attempt] + encodeURIComponent(DATA_URL + "?t=" + Date.now());
-            // Если attempt 0, используем прямую ссылку без encode
-            const fetchUrl = attempt === 0 ? DATA_URL + "?t=" + Date.now() : finalUrl;
-
-            const res = await fetch(fetchUrl);
-            if (!res.ok) throw new Error("Fetch failed");
+            const r = await fetch(GITHUB_URL + "?t=" + Date.now());
+            const text = await r.text();
             
-            const text = await res.text();
-            const lines = text.split('\n').filter(l => l.includes('proxy?'));
+            proxies = text.split('\n').filter(l => l.includes('proxy?')).map(line => {
+                const p = new URLSearchParams(line.split('?')[1]);
+                return {
+                    host: p.get('server'),
+                    port: p.get('port'),
+                    full: line.trim(),
+                    ping: null
+                };
+            });
 
-            if (lines.length === 0) throw new Error("No proxies found");
+            render();
 
-            msg.style.display = "none";
-            render(lines);
+            // Пинг через HTTPS
+            for (let i = 0; i < proxies.length; i++) {
+                const p = proxies[i];
+                const start = Date.now();
+                
+                try {
+                    const ctrl = new AbortController();
+                    const timeout = setTimeout(() => ctrl.abort(), 1600);
+                    await fetch(`https://${p.host}:${p.port}`, { mode: 'no-cors', signal: ctrl.signal });
+                    clearTimeout(timeout);
+                    p.ping = Date.now() - start;
+                } catch (e) {
+                    p.ping = (Date.now() - start > 1500) ? 999 : (Date.now() - start);
+                }
 
-        } catch (e) {
-            console.error(`Попытка ${attempt} не удалась`, e);
-            if (attempt < PROXY_HELPERS.length - 1) {
-                loadData(attempt + 1);
-            } else {
-                msg.innerText = "Ошибка загрузки. Проверьте интернет или GitHub.";
+                bar.style.width = ((i + 1) / proxies.length * 100) + "%";
+                if (i % 2 === 0 || i === proxies.length - 1) render();
             }
+            
+            setTimeout(() => bar.style.width = "0%", 1000);
+        } catch (e) {
+            list.innerHTML = "<div style='text-align:center; color:red; padding:20px;'>Ошибка сети</div>";
+        } finally {
+            refreshBtn.classList.remove('rotating'); // Стоп анимация
         }
     }
 
-    function render(lines) {
-        const list = document.getElementById('mainList');
-        list.innerHTML = "";
+    function render() {
+        const main = document.getElementById('mainList');
+        
+        // Сортировка по пингу
+        const sorted = [...proxies].sort((a, b) => {
+            if (a.ping === null) return 1;
+            if (b.ping === null) return -1;
+            return a.ping - b.ping;
+        });
 
-        lines.forEach(line => {
-            const urlParams = new URLSearchParams(line.split('?')[1]);
-            const server = urlParams.get('server');
-            const port = urlParams.get('port');
-            
-            if (!server) return;
-
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
+        main.innerHTML = sorted.map(p => `
+            <div class="card">
                 <div class="info">
-                    <div class="server-name">🛡️ ${server}</div>
+                    <div class="server-name">🛡️ ${p.host}</div>
                     <div class="server-meta">
-                        <span class="dot online"></span>
-                        Порт: ${port} • MTProto
+                        <span class="ping-val ${p.ping && p.ping < 400 ? 'fast' : 'slow'}">
+                            ${p.ping ? p.ping + ' ms' : '...'}
+                        </span>
+                        <span>• Port: ${p.port}</span>
                     </div>
                 </div>
-                <div style="display:flex;">
-                    <button class="btn btn-copy" onclick="copyToClipboard('${line.trim()}', this)">📋</button>
-                    <button class="btn" onclick="window.open('${line.trim().replace('tg://', 'https://t.me/')}', '_blank')">Set</button>
+                <div class="actions">
+                    <button class="icon-btn btn-copy" onclick="copyAddr('${p.full}', this)" title="Копировать адрес">
+                        ${ICON_COPY}
+                    </button>
+                    <button class="icon-btn btn-set" onclick="window.open('${p.full.replace('tg://', 'https://t.me/')}', '_blank')" title="Подключить">
+                        ${ICON_PLANE}
+                    </button>
                 </div>
-            `;
-            list.appendChild(card);
-        });
+            </div>
+        `).join('');
     }
 
-    function copyToClipboard(text, btn) {
+    function copyAddr(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
-            const old = btn.innerText;
-            btn.innerText = "✅";
-            setTimeout(() => btn.innerText = old, 1000);
+            btn.innerHTML = ICON_CHECK; // Галочка
+            btn.style.color = "var(--apple-green)";
+            btn.style.borderColor = "var(--apple-green)";
+            setTimeout(() => {
+                btn.innerHTML = ICON_COPY; // Вернуть иконку копирования
+                btn.style.color = "#fff";
+                btn.style.borderColor = "#38383A";
+            }, 1000);
         });
     }
 
-    document.getElementById('refreshBtn').onclick = () => loadData(0);
-    
-    // Запуск
-    loadData(0);
+    document.getElementById('refreshBtn').onclick = load;
+    // Автозагрузка при старте
+    load();
 </script>
 </body>
 </html>
