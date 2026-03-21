@@ -87,10 +87,6 @@
             background: rgba(255,255,255,0.08); border-radius: 50%; width: 36px; height: 36px;
             display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; border: none; text-decoration: none;
         }
-        .header-icon.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
         
         .btn-fav { background: #2C2C2E; color: #8E8E93; border: 0.5px solid #38383A; }
         .btn-fav.active { color: var(--apple-yellow); }
@@ -105,8 +101,9 @@
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
         .modal-content { 
-            background: #1C1C1E; width: 85%; max-width: 350px; padding: 25px; 
+            background: #1C1C1E; width: 85%; max-width: 380px; padding: 25px; 
             border-radius: 28px; border: 0.5px solid #38383A; text-align: center;
+            max-height: 90vh; overflow-y: auto;
         }
         .modal-disclaimer {
             margin-top: 14px;
@@ -138,8 +135,16 @@
             align-items: center;
             gap: 8px;
         }
-        .modal-btn-main { background: var(--apple-blue); color: #fff; text-decoration: none; padding: 14px; border-radius: 14px; display: block; font-weight: 700; margin-top: 20px; font-size: 16px; }
+        .modal-btn-main { background: var(--apple-blue); color: #fff; text-decoration: none; padding: 14px; border-radius: 14px; display: block; font-weight: 700; margin-top: 20px; font-size: 16px; border: none; cursor: pointer; }
         .modal-link-sub { color: var(--apple-blue); text-decoration: none; display: inline-block; margin-top: 15px; font-size: 13px; font-weight: 500; }
+
+        /* Стили для доната */
+        .qr-image { width: 180px; height: 180px; margin: 15px auto; border-radius: 18px; border: 0.5px solid #38383A; display: block; }
+        .donate-item { margin-top: 20px; text-align: left; }
+        .wallet-label { font-size: 12px; color: #fff; font-weight: 700; margin-bottom: 6px; display: block; }
+        .wallet-address { background: #2C2C2E; padding: 12px; border-radius: 12px; font-family: monospace; font-size: 11px; word-break: break-all; color: var(--apple-blue); cursor: pointer; border: 0.5px solid #38383A; transition: 0.2s; }
+        .wallet-address:active { background: #3A3A3C; }
+        .network-warning { font-size: 11px; color: var(--apple-red); line-height: 1.4; margin-top: 8px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -153,13 +158,13 @@
             <div style="color: var(--text-gray); font-size: 11px; margin-top: 2px;">Список серверов обновляется каждые 12 часов</div>
         </div>
         <div class="nav-right">
-            <a class="header-icon" href="https://t.me/MTProto_Proxy_Telega" target="_blank" title="Канал Telegram" aria-label="Telegram channel">
+            <a class="header-icon" href="https://t.me/proxy_public0" target="_blank" title="Канал Telegram" aria-label="Telegram channel">
                 <svg width="20" height="20" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="240" height="240" rx="48" fill="#29A9E8"/>
                     <path d="M56.8 117.4c-10.1-3.5-10-8.3.2-11.8l111.6-37.8c9.9-3.4 15.5 2 12.3 15.4l-19 88.1c-2.6 11.5-9 14.3-18.3 9l-29.7-21.9-14.3 13.9c-1.6 1.6-3 3-6.2 3l2.2-32.1 58.4-52.7c2.5-2.2-.6-3.5-3.9-1.3l-72.2 45.5-31.2-10.3Z" fill="white"/>
                 </svg>
             </a>
-            <button class="header-icon disabled" aria-disabled="true" title="Донат скоро">
+            <button class="header-icon" style="background: var(--apple-yellow); color: #000;" onclick="openModal('donateModal')" title="Поддержать проект">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.35-8-11a8 8 0 0 1 16 0c0 6.65-8 11-8 11Z"></path><path d="M12 11a2 2 0 1 0-2-2"></path></svg>
             </button>
             <button class="header-icon" onclick="openModal('historyModal')">
@@ -183,6 +188,38 @@
     <div id="mainList" class="list"></div>
 </div>
 
+<div id="donateModal" class="modal">
+    <div class="modal-content">
+        <div style="font-size: 32px;">☕</div>
+        <h2 style="margin: 10px 0; font-size: 20px;">Поддержать автора</h2>
+        <p style="color: var(--text-gray); font-size: 13px;">Буду благодарен за любую поддержку проекта. Это помогает развивать монитор.</p>
+        
+        <img src="https://github.com/angryarny-dot/MTProto-Proxy-Telega-Web-Monitor-/blob/main/qr_code.png?raw=true" alt="QR Code" class="qr-image">
+        
+        <div class="donate-item">
+            <span class="wallet-label">Адрес USDT (TRC20):</span>
+            <div class="wallet-address" onclick="copyValue('THSHT2xXAM59ULy8uuqbF4j6UvLQB7ryXF', this)">
+                THSHT2xXAM59ULy8uuqbF4j6UvLQB7ryXF
+            </div>
+            <div class="network-warning">
+                На этот адрес отправляйте только <b>USDT TRC20</b>. Активы других сетей или NFT будут безвозвратно утрачены.
+            </div>
+        </div>
+
+        <div class="donate-item" style="margin-top: 25px;">
+            <span class="wallet-label">Адрес TON / USDT (TON):</span>
+            <div class="wallet-address" onclick="copyValue('UQBEFBL8bBmAuGmBKe9OfexXIXoBEsJ-Tjsix77kM-wRyNYN', this)">
+                UQBEFBL8bBmAuGmBKe9OfexXIXoBEsJ-Tjsix77kM-wRyNYN
+            </div>
+            <div class="network-warning">
+                На этот адрес отправляйте только <b>Toncoin (TON)</b>, <b>USDT (TON)</b> и токены блокчейна TON, иначе ваши средства будут безвозвратно утрачены.
+            </div>
+        </div>
+
+        <button onclick="closeModal('donateModal')" class="modal-btn-main" style="background: #2C2C2E; margin-top: 25px;">Закрыть</button>
+    </div>
+</div>
+
 <div id="connectModal" class="modal">
     <div class="modal-content">
         <div style="font-size: 44px; margin-bottom: 10px;">⚡</div>
@@ -197,11 +234,8 @@
                 </button>
             </div>
         </div>
-        
         <a href="#" id="finalConnectBtn" class="modal-btn-main" onclick="closeModal('connectModal')">Войти</a>
-        
-        <a href="https://t.me/MTProto_Proxy_Telega" target="_blank" class="modal-link-sub">Наш Telegram канал →</a>
-        
+        <a href="https://t.me/proxy_public0" target="_blank" class="modal-link-sub">Наш Telegram канал →</a>
         <button onclick="closeModal('connectModal')" style="background:none; border:none; color:var(--text-gray); margin-top:20px; cursor:pointer; font-size: 12px; width: 100%;">Отмена</button>
     </div>
 </div>
@@ -257,6 +291,13 @@
         if (!currentConnectLink) return;
         navigator.clipboard.writeText(currentConnectLink);
         alert('Ссылка на сервер скопирована');
+    }
+
+    function copyValue(val, el) {
+        navigator.clipboard.writeText(val);
+        const originalText = el.innerText;
+        el.innerText = "Скопировано!";
+        setTimeout(() => { el.innerText = originalText; }, 1500);
     }
 
     async function load() {
