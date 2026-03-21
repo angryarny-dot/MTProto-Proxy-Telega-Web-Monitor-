@@ -32,9 +32,18 @@
             position: sticky; top: 0; z-index: 100;
             border-bottom: 0.5px solid #2C2C2E;
             display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 6px;
         }
 
-        .nav-right { display: flex; gap: 12px; align-items: center; }
+        .header-note {
+            width: 100%;
+            font-size: 12px;
+            color: var(--apple-yellow);
+            font-weight: 700;
+            letter-spacing: -0.1px;
+        }
+
+        .nav-right { display: flex; gap: 8px; align-items: center; }
 
         .tooltip-container { position: relative; display: inline-flex; }
         .tooltip-text {
@@ -44,33 +53,43 @@
             transition: 0.2s; font-size: 11px; font-weight: 600;
             white-space: nowrap; pointer-events: none;
             bottom: 125%; left: 50%; transform: translateX(-50%) translateY(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
-        header .tooltip-text { bottom: auto; top: 125%; transform: translateX(-50%) translateY(-5px); }
         .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        #loadingNote {
+            display: none; background: #1C1C1E; padding: 10px 16px;
+            border-bottom: 0.5px solid #2C2C2E; font-size: 12px;
+            color: var(--text-gray); text-align: center;
+        }
 
         .list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
         .card {
-            background: var(--card-gray); border-radius: 20px; padding: 16px;
+            background: var(--card-gray); border-radius: 20px; padding: 14px;
             display: flex; justify-content: space-between; align-items: center;
             border: 0.5px solid #38383A;
         }
-        .info { flex: 1; min-width: 0; margin-right: 12px; }
-        .server-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .server-meta { font-size: 13px; color: var(--text-gray); display: flex; align-items: center; gap: 8px; }
-        .ping-val { font-weight: 800; font-size: 11px; padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+        .info { flex: 1; min-width: 0; margin-right: 8px; }
+        .server-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .server-name span { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+        .server-meta { font-size: 12px; color: var(--text-gray); display: flex; align-items: center; gap: 6px; }
+        .ping-val { font-weight: 800; font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
         .fast { color: var(--apple-green); }
         .slow { color: var(--apple-yellow); }
+        .dead { color: var(--apple-red); }
 
-        .actions { display: flex; gap: 8px; }
+        .actions { display: flex; gap: 6px; }
         .icon-btn { 
-            width: 38px; height: 38px; border-radius: 11px; border: none;
+            width: 36px; height: 36px; border-radius: 10px; border: none;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: 0.2s;
         }
         .header-icon {
-            background: rgba(255,255,255,0.1); border-radius: 50%; width: 38px; height: 38px;
+            background: rgba(255,255,255,0.08); border-radius: 50%; width: 36px; height: 36px;
             display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; border: none; text-decoration: none;
+        }
+        .header-icon.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
         
         .btn-fav { background: #2C2C2E; color: #8E8E93; border: 0.5px solid #38383A; }
@@ -79,13 +98,48 @@
         .btn-set { background: var(--apple-blue); color: #fff; }
 
         .section-label { color: var(--text-gray); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 20px 16px 0px 16px; }
-        #progress-line { height: 2px; background: var(--apple-blue); width: 0%; position: fixed; top: 70px; z-index: 101; transition: width 0.2s; }
+        #progress-line { height: 2px; background: var(--apple-blue); width: 0%; position: fixed; top: 68px; z-index: 101; transition: width 0.2s; }
         
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .rotating { animation: rotate 1s linear infinite; }
 
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
-        .modal-content { background: #1C1C1E; width: 85%; max-width: 400px; padding: 24px; border-radius: 28px; text-align: center; border: 0.5px solid #38383A; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
+        .modal-content { 
+            background: #1C1C1E; width: 85%; max-width: 350px; padding: 25px; 
+            border-radius: 28px; border: 0.5px solid #38383A; text-align: center;
+        }
+        .modal-disclaimer {
+            margin-top: 14px;
+            padding: 10px 12px;
+            background: #2C2C2E;
+            color: var(--text-gray);
+            border: 0.5px solid #38383A;
+            border-radius: 14px;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .disclaimer-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+            gap: 8px;
+        }
+        .btn-ghost {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border: 0.5px solid #38383A;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-btn-main { background: var(--apple-blue); color: #fff; text-decoration: none; padding: 14px; border-radius: 14px; display: block; font-weight: 700; margin-top: 20px; font-size: 16px; }
+        .modal-link-sub { color: var(--apple-blue); text-decoration: none; display: inline-block; margin-top: 15px; font-size: 13px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -94,48 +148,71 @@
 
 <div class="container">
     <header>
-        <h1 style="font-size: 19px; margin: 0;">MTProto Gold</h1>
-        <div class="nav-right">
-            <div class="tooltip-container">
-                <a href="https://t.me/MTProto_Proxy_Telega" target="_blank" class="header-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.89.03-.25.38-.51 1.05-.78 4.12-1.79 6.87-2.97 8.24-3.54 3.94-1.63 4.76-1.92 5.3-.1z"/></svg>
-                </a>
-                <span class="tooltip-text">Наш канал</span>
-            </div>
-            
-            <div class="tooltip-container">
-                <button class="header-icon" onclick="openModal()" style="color:var(--apple-red)">❤️</button>
-                <span class="tooltip-text">Поддержать</span>
-            </div>
-
-            <div class="tooltip-container">
-                <button class="header-icon" id="refreshBtn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                </button>
-                <span class="tooltip-text" style="left:auto; right:0; transform:none;">Обновить</span>
-            </div>
+        <div>
+            <h1 style="font-size: 18px; margin: 0; letter-spacing: -0.5px;">MTProto Gold</h1>
+            <div style="color: var(--text-gray); font-size: 11px; margin-top: 2px;">Список серверов обновляется каждые 12 часов</div>
         </div>
+        <div class="nav-right">
+            <a class="header-icon" href="https://t.me/MTProto_Proxy_Telega" target="_blank" title="Канал Telegram" aria-label="Telegram channel">
+                <svg width="20" height="20" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="240" height="240" rx="48" fill="#29A9E8"/>
+                    <path d="M56.8 117.4c-10.1-3.5-10-8.3.2-11.8l111.6-37.8c9.9-3.4 15.5 2 12.3 15.4l-19 88.1c-2.6 11.5-9 14.3-18.3 9l-29.7-21.9-14.3 13.9c-1.6 1.6-3 3-6.2 3l2.2-32.1 58.4-52.7c2.5-2.2-.6-3.5-3.9-1.3l-72.2 45.5-31.2-10.3Z" fill="white"/>
+                </svg>
+            </a>
+            <button class="header-icon disabled" aria-disabled="true" title="Донат скоро">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-8-4.35-8-11a8 8 0 0 1 16 0c0 6.65-8 11-8 11Z"></path><path d="M12 11a2 2 0 1 0-2-2"></path></svg>
+            </button>
+            <button class="header-icon" onclick="openModal('historyModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </button>
+            <button class="header-icon" id="refreshBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </button>
+        </div>
+        <div class="header-note">Обновление серверов, подождите 5–10 секунд</div>
     </header>
+
+    <div id="loadingNote">Проверка соединения... На данном этапе пингуются самые быстрые и доступные сервера. Из-за высокой нагрузки сервера могут не отвечать.</div>
 
     <div id="favoriteSection" style="display:none;">
         <div class="section-label" style="color:var(--apple-yellow)">⭐ Избранное</div>
-        <div id="favoriteList" class="list" style="padding-bottom: 0;"></div>
+        <div id="favoriteList" class="list"></div>
     </div>
 
-    <div id="historyTitle" class="section-label" style="color: var(--apple-blue); display: none;">📜 История</div>
-    <div id="historyList" class="list" style="padding-bottom: 0;"></div>
+    <div class="section-label">Все прокси</div>
+    <div id="mainList" class="list"></div>
+</div>
 
-    <div class="section-label">Все серверы</div>
-    <div id="mainList" class="list">
-        <div style="text-align:center; color:var(--text-gray); padding:40px;">Загрузка списка...</div>
+<div id="connectModal" class="modal">
+    <div class="modal-content">
+        <div style="font-size: 44px; margin-bottom: 10px;">⚡</div>
+        <h2 style="margin: 0; font-size: 20px;">Подключение</h2>
+        <p style="color: var(--text-gray); font-size: 14px; margin-top: 8px;">Вы выбрали быстрый сервер. Нажмите «Войти» для перехода в Telegram.</p>
+        <div class="modal-disclaimer">
+            Если сервер открывается просто как страница Telegram: скопируйте ссылку с адресом, добавьте её в избранное и открывайте этот адрес оттуда.
+            <div class="disclaimer-actions">
+                <button class="btn-ghost" onclick="copyConnectLink()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Скопировать сервер
+                </button>
+            </div>
+        </div>
+        
+        <a href="#" id="finalConnectBtn" class="modal-btn-main" onclick="closeModal('connectModal')">Войти</a>
+        
+        <a href="https://t.me/MTProto_Proxy_Telega" target="_blank" class="modal-link-sub">Наш Telegram канал →</a>
+        
+        <button onclick="closeModal('connectModal')" style="background:none; border:none; color:var(--text-gray); margin-top:20px; cursor:pointer; font-size: 12px; width: 100%;">Отмена</button>
     </div>
 </div>
 
-<div id="donateModal" class="modal">
-    <div class="modal-content">
-        <h2 style="color:var(--apple-red)">Поддержка</h2>
-        <p style="color:var(--text-gray)">Текст вашей поддержки.</p>
-        <button onclick="closeModal()" style="background:var(--apple-blue); border:none; padding:12px; border-radius:12px; color:#fff; width:100%; cursor:pointer; font-weight:600;">Закрыть</button>
+<div id="historyModal" class="modal">
+    <div class="modal-content" style="text-align: left; max-height: 70vh; overflow-y: auto; width: 90%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0; font-size:18px;">📜 Недавние</h2>
+            <button onclick="closeModal('historyModal')" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
+        </div>
+        <div id="historyList"></div>
     </div>
 </div>
 
@@ -148,16 +225,49 @@
     let proxies = [];
     let favorites = JSON.parse(localStorage.getItem('userFavs') || '[]');
     let history = JSON.parse(localStorage.getItem('proxyHistory') || '[]');
+    let currentConnectLink = '';
 
-    function openModal() { document.getElementById('donateModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('donateModal').style.display = 'none'; }
+    function getFlag(host) {
+        const h = host.toLowerCase();
+        if (h.endsWith('.ir')) return '🇮🇷';
+        if (h.endsWith('.ru')) return '🇷🇺';
+        if (h.endsWith('.ge') || h.includes('georgia')) return '🇬🇪';
+        if (h.endsWith('.br') || h.includes('brazil')) return '🇧🇷';
+        if (h.endsWith('.de') || h.includes('germany')) return '🇩🇪';
+        if (h.endsWith('.fi')) return '🇫🇮';
+        if (h.endsWith('.tr')) return '🇹🇷';
+        if (h.endsWith('.nl')) return '🇳🇱';
+        if (h.endsWith('.us')) return '🇺🇸';
+        if (h.endsWith('.gb') || h.endsWith('.uk')) return '🇬🇧';
+        return '🌐';
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function prepareConnect(url, obj) {
+        addToHistory(obj);
+        const btn = document.getElementById('finalConnectBtn');
+        currentConnectLink = url;
+        btn.href = url.replace('tg://','https://t.me/');
+        openModal('connectModal');
+    }
+
+    function copyConnectLink() {
+        if (!currentConnectLink) return;
+        navigator.clipboard.writeText(currentConnectLink);
+        alert('Ссылка на сервер скопирована');
+    }
 
     async function load() {
         const btn = document.getElementById('refreshBtn');
         const bar = document.getElementById('progress-line');
+        const note = document.getElementById('loadingNote');
         if (btn.classList.contains('rotating')) return;
         
         btn.classList.add('rotating');
+        note.style.display = 'block';
+        
         try {
             const r = await fetch(DATA_URL + "?t=" + Date.now());
             const text = await r.text();
@@ -172,25 +282,32 @@
                 const start = Date.now();
                 try {
                     const ctrl = new AbortController();
-                    const timeout = setTimeout(() => ctrl.abort(), 1600);
+                    const timeout = setTimeout(() => ctrl.abort(), 1500);
                     await fetch(`https://${p.host}:${p.port}`, { mode: 'no-cors', signal: ctrl.signal });
                     clearTimeout(timeout);
                     p.ping = Date.now() - start;
                 } catch (e) {
-                    // Используем твою новую логику для корректного пинга
                     const end = Date.now() - start;
-                    p.ping = (end > 1500) ? 999 : end;
+                    p.ping = (end > 1400) ? 999 : end;
                 }
                 bar.style.width = ((i + 1) / proxies.length * 100) + "%";
-                if (i % 3 === 0 || i === proxies.length - 1) render();
+                if (i % 3 === 0) render();
             }
-            setTimeout(() => bar.style.width = "0%", 1000);
-        } finally { btn.classList.remove('rotating'); }
+        } finally {
+            btn.classList.remove('rotating');
+            render();
+            setTimeout(() => { bar.style.width = "0%"; note.style.display = 'none'; }, 800);
+        }
+    }
+
+    function addToHistory(p) {
+        history = [p, ...history.filter(h => h.full !== p.full)].slice(0, 5);
+        localStorage.setItem('proxyHistory', JSON.stringify(history));
     }
 
     function toggleFav(full) {
         const idx = favorites.findIndex(f => f.full === full);
-        if (idx > -1) { favorites.splice(idx, 1); }
+        if (idx > -1) favorites.splice(idx, 1);
         else {
             const p = proxies.find(x => x.full === full) || history.find(x => x.full === full);
             if (p) favorites.push({...p});
@@ -199,52 +316,45 @@
         render();
     }
 
-    function addToHistory(p) {
-        history = history.filter(h => h.full !== p.full);
-        history.unshift(p);
-        history = history.slice(0, 5);
-        localStorage.setItem('proxyHistory', JSON.stringify(history));
-        render();
-    }
-
     function copyAddr(text, btn, obj) {
         addToHistory(obj);
         navigator.clipboard.writeText(text);
         const tip = btn.parentElement.querySelector('.tooltip-text');
-        const oldText = tip.innerText;
-        tip.innerText = "Готово!";
-        setTimeout(() => tip.innerText = oldText, 1200);
+        if(tip) {
+            tip.innerText = "Готово!";
+            setTimeout(() => tip.innerText = "Копировать", 1500);
+        }
     }
 
     function cardHtml(p) {
         const isFav = favorites.some(f => f.full === p.full);
-        const pingDisplay = p.ping === null ? '...' : (p.ping >= 999 ? 'timeout' : p.ping + ' ms');
-        const pingClass = (p.ping && p.ping < 400) ? 'fast' : (p.ping >= 999 ? '' : 'slow');
+        const flag = getFlag(p.host);
+        let dot = '⚪'; let pClass = ''; let pText = p.ping ? p.ping + ' ms' : '...';
+
+        if (p.ping !== null) {
+            if (p.ping < 450) { dot = '🟢'; pClass = 'fast'; }
+            else if (p.ping < 999) { dot = '🟡'; pClass = 'slow'; }
+            else { dot = '🔴'; pClass = 'dead'; pText = 'timeout'; }
+        }
+
+        const pJson = JSON.stringify(p).replace(/"/g, '&quot;');
 
         return `
-            <div class="card">
+            <div class="card" style="${p.ping >= 999 ? 'opacity: 0.5' : ''}">
                 <div class="info">
-                    <div class="server-name">🛡️ ${p.host}</div>
+                    <div class="server-name">${dot} ${flag} <span>${p.host}</span></div>
                     <div class="server-meta">
-                        <span class="ping-val ${pingClass}">${pingDisplay}</span>
+                        <span class="ping-val ${pClass}">${pText}</span>
                         <span>• ${p.port}</span>
                     </div>
                 </div>
                 <div class="actions">
+                    <button class="icon-btn btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav('${p.full}')">${ICON_STAR}</button>
                     <div class="tooltip-container">
-                        <button class="icon-btn btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav('${p.full}')">${ICON_STAR}</button>
-                        <span class="tooltip-text">${isFav ? 'Убрать' : 'В избранное'}</span>
-                    </div>
-                    <div class="tooltip-container">
-                        <button class="icon-btn btn-copy" onclick="copyAddr('${p.full}', this, ${JSON.stringify(p).replace(/"/g, '&quot;')})">${ICON_COPY}</button>
+                        <button class="icon-btn btn-copy" onclick="copyAddr('${p.full}', this, ${pJson})">${ICON_COPY}</button>
                         <span class="tooltip-text">Копировать</span>
                     </div>
-                    <div class="tooltip-container">
-                        <button class="icon-btn btn-set" onclick="addToHistory(${JSON.stringify(p).replace(/"/g, '&quot;')}); window.open('${p.full.replace('tg://','https://t.me/')}','_blank')">
-                            ${ICON_PLANE}
-                        </button>
-                        <span class="tooltip-text">Подключить</span>
-                    </div>
+                    <button class="icon-btn btn-set" onclick="prepareConnect('${p.full}', ${pJson})">${ICON_PLANE}</button>
                 </div>
             </div>`;
     }
@@ -254,20 +364,11 @@
         if (favorites.length) {
             favBox.style.display = 'block';
             document.getElementById('favoriteList').innerHTML = favorites.map(p => cardHtml(p)).join('');
-        } else { favBox.style.display = 'none'; }
+        } else favBox.style.display = 'none';
 
-        const histBox = document.getElementById('historyTitle');
-        if (history.length) {
-            histBox.style.display = 'block';
-            document.getElementById('historyList').innerHTML = history.map(p => cardHtml(p)).join('');
-        } else { histBox.style.display = 'none'; }
-
-        const sorted = [...proxies].sort((a, b) => {
-            if (a.ping === null) return 1;
-            if (b.ping === null) return -1;
-            return a.ping - b.ping;
-        });
+        const sorted = [...proxies].sort((a, b) => (a.ping === null ? 1 : b.ping === null ? -1 : a.ping - b.ping));
         document.getElementById('mainList').innerHTML = sorted.map(p => cardHtml(p)).join('');
+        document.getElementById('historyList').innerHTML = history.map(p => cardHtml(p)).join('') || 'Пусто';
     }
 
     window.onload = load;
