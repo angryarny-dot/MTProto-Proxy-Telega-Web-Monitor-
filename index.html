@@ -437,7 +437,11 @@
         addToHistory(obj);
         currentConnectLink = url;
         currentProxyObj = obj;
-        document.getElementById('finalConnectBtn').href = url.replace('tg://','https://t.me/');
+
+        // Вносим правку здесь: проверяем протокол и формируем корректную ссылку для кнопки
+        const telegramLink = url.startsWith('tg://') ? url.replace('tg://', 'https://t.me/') : url;
+        document.getElementById('finalConnectBtn').setAttribute('href', telegramLink);
+
         document.getElementById('detailHost').innerText = obj.host || '-';
         document.getElementById('detailPort').innerText = obj.port || '-';
         document.getElementById('detailSecret').innerText = obj.secret || '-';
