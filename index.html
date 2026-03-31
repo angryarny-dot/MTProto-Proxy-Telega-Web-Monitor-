@@ -434,13 +434,25 @@
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function prepareConnect(url, obj) {
+        // Если url не пришел или это не строка, выходим, чтобы не плодить ошибки
+        if (!url || typeof url !== 'string' || url === 'undefined') {
+            alert('Ошибка: Данные сервера повреждены. Попробуйте обновить список.');
+            return;
+        }
+
         addToHistory(obj);
-        currentConnectLink = url;
+        currentConnectLink = url.trim();
         currentProxyObj = obj;
 
-        // Вносим правку здесь: проверяем протокол и формируем корректную ссылку для кнопки
-        const telegramLink = url.startsWith('tg://') ? url.replace('tg://', 'https://t.me/') : url;
-        document.getElementById('finalConnectBtn').setAttribute('href', telegramLink);
+        // Формируем прямую ссылку для кнопки "Войти"
+        const telegramLink = currentConnectLink.startsWith('tg://') 
+            ? currentConnectLink.replace('tg://', 'https://t.me/') 
+            : currentConnectLink;
+
+        const connectBtn = document.getElementById('finalConnectBtn');
+        if (connectBtn) {
+            connectBtn.setAttribute('href', telegramLink);
+        }
 
         document.getElementById('detailHost').innerText = obj.host || '-';
         document.getElementById('detailPort').innerText = obj.port || '-';
@@ -476,26 +488,47 @@
         const btn = document.getElementById('refreshBtn');
         const note = document.getElementById('loadingNote');
         const bar = document.getElementById('progress-line');
+        const statusNote = document.getElementById('statusNote');
+        const mainList = document.getElementById('mainList');
+        
         if (btn.classList.contains('rotating')) return;
         
         btn.classList.add('rotating');
         note.style.display = 'block';
         bar.style.width = "30%";
-        document.getElementById('statusNote').innerText = 'Сервер просыпается 😴 Подождите 15-30 сек и обновите страницу';
+        statusNote.innerText = 'Сервер просыпается 😴 Подождите 15-30 сек и обновите страницу';
 
         try {
             const r = await fetch(API_URL);
             const data = await r.json();
             proxies = Array.isArray(data) ? data.filter(i => i && i.host) : [];
-            bar.style.width = "100%";
-            const aliveCount = proxies.filter(p => p.alive).length;
-            document.getElementById('statusNote').innerText = `Сервер готов 😊 доступно ${aliveCount}/${proxies.length} серверов`;
+            
+            // Показываем промежуточный прогресс, статус загрузки
+            bar.style.width = "70%";
+            statusNote.innerText = proxies.length > 0 
+                ? `Загрузка списка... ⏳ найдено ${proxies.length} серверов`
+                : 'Загрузка списка... ⏳';
+            
+            // Рендерим список
+            render();
+            
+            // Проверяем, появился ли список в DOM
+            const hasContent = mainList && mainList.children.length > 0;
+            
+            if (hasContent && proxies.length > 0) {
+                // Только теперь показываем 100% и "готово"
+                bar.style.width = "100%";
+                const aliveCount = proxies.filter(p => p.alive).length;
+                statusNote.innerText = `Сервер готов 😊 доступно ${aliveCount}/${proxies.length} серверов`;
+            } else {
+                // Список пуст - показываем предупреждение
+                statusNote.innerText = 'Список серверов пуст. Попробуйте обновить позже.';
+            }
         } catch (e) {
             console.error(e);
-            document.getElementById('statusNote').innerText = 'Сервер просыпается 😴 Подождите 15-30 сек и обновите страницу';
+            statusNote.innerText = 'Сервер просыпается 😴 Подождите 15-30 сек и обновите страницу';
         } finally {
             btn.classList.remove('rotating');
-            render();
             setTimeout(() => { bar.style.width = "0%"; note.style.display = 'none'; }, 800);
         }
     }
@@ -528,8 +561,13 @@
     }
 
     function cardHtml(p) {
-        if (!p || !p.host) return ''; // Защита от пустых карточек
-        const isFav = favorites.some(f => f.full === p.full);
+        if (!p || !p.host) return ''; 
+        
+        // ГАРАНТИРУЕМ, что ссылка существует. Если поля 'full' нет, 
+        // пробуем собрать её из данных или ставим пустую строку
+        const proxyLink = p.full || `tg://proxy?server=${p.host}&port=${p.port}&secret=${p.secret}`;
+        
+        const isFav = favorites.some(f => f.full === proxyLink);
         const flag = getFlag(p.host);
         const dot = p.alive ? (p.ping < 500 ? '🟢' : '🟡') : '🔴';
         const pClass = p.alive ? (p.ping < 500 ? 'fast' : 'slow') : 'dead';
@@ -546,12 +584,12 @@
                     </div>
                 </div>
                 <div class="actions">
-                    <button class="icon-btn btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav('${p.full}')">${ICON_STAR}</button>
+                    <button class="icon-btn btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav('${proxyLink}')">${ICON_STAR}</button>
                     <div class="tooltip-container">
-                        <button class="icon-btn btn-copy" onclick="copyAddr('${p.full}', this, ${pJson})">${ICON_COPY}</button>
+                        <button class="icon-btn btn-copy" onclick="copyAddr('${proxyLink}', this, ${pJson})">${ICON_COPY}</button>
                         <span class="tooltip-text">Копировать</span>
                     </div>
-                    <button class="icon-btn btn-set" onclick="prepareConnect('${p.full}', ${pJson})">${ICON_PLANE}</button>
+                    <button class="icon-btn btn-set" onclick="prepareConnect('${proxyLink}', ${pJson})">${ICON_PLANE}</button>
                 </div>
             </div>`;
     }
